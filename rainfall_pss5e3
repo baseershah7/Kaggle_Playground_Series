@@ -1,0 +1,2348 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "a035d01e",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:15.264451Z",
+     "iopub.status.busy": "2025-07-23T18:26:15.263901Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.305091Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.303809Z"
+    },
+    "papermill": {
+     "duration": 1.066169,
+     "end_time": "2025-07-23T18:26:16.306958",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:15.240789",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/kaggle/input/playground-series-s5e3/sample_submission.csv\n",
+      "/kaggle/input/playground-series-s5e3/train.csv\n",
+      "/kaggle/input/playground-series-s5e3/test.csv\n",
+      "/kaggle/input/rainfall-prediction-using-machine-learning/Rainfall.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "bd7b5979",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.330105Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.329497Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.333930Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.332869Z"
+    },
+    "papermill": {
+     "duration": 0.017827,
+     "end_time": "2025-07-23T18:26:16.335812",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.317985",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "seed = 1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "a02c72b4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.358845Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.358513Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.401323Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.399663Z"
+    },
+    "papermill": {
+     "duration": 0.056521,
+     "end_time": "2025-07-23T18:26:16.403330",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.346809",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train = pd.read_csv('/kaggle/input/playground-series-s5e3/train.csv')\n",
+    "test = pd.read_csv('/kaggle/input/playground-series-s5e3/test.csv')\n",
+    "train_org = pd.read_csv('/kaggle/input/rainfall-prediction-using-machine-learning/Rainfall.csv')\n",
+    "# target = train['rainfall']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "c7f82613",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.425718Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.425368Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.432254Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.431217Z"
+    },
+    "papermill": {
+     "duration": 0.020014,
+     "end_time": "2025-07-23T18:26:16.433949",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.413935",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['id', 'day', 'pressure', 'maxtemp', 'temparature', 'mintemp',\n",
+       "       'dewpoint', 'humidity', 'cloud', 'sunshine', 'winddirection',\n",
+       "       'windspeed', 'rainfall'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "49986e6e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.456873Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.456531Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.469418Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.468254Z"
+    },
+    "papermill": {
+     "duration": 0.02624,
+     "end_time": "2025-07-23T18:26:16.471066",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.444826",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train.drop(columns='id', inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "92a0be88",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.494714Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.494369Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.500368Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.499435Z"
+    },
+    "papermill": {
+     "duration": 0.019937,
+     "end_time": "2025-07-23T18:26:16.501915",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.481978",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['day', 'pressure ', 'maxtemp', 'temparature', 'mintemp', 'dewpoint',\n",
+       "       'humidity ', 'cloud ', 'rainfall', 'sunshine', '         winddirection',\n",
+       "       'windspeed'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_org.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "f1fa78c8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.524840Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.524486Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.529948Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.528837Z"
+    },
+    "papermill": {
+     "duration": 0.018869,
+     "end_time": "2025-07-23T18:26:16.531700",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.512831",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train.columns = train.columns.str.strip().str.lower()\n",
+    "train_org.columns = train_org.columns.str.strip().str.lower()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "65f146a8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.555334Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.554932Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.559109Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.557977Z"
+    },
+    "papermill": {
+     "duration": 0.018463,
+     "end_time": "2025-07-23T18:26:16.561181",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.542718",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# train.drop(columns=['id'], inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "10acce55",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.584658Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.584234Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.595365Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.594408Z"
+    },
+    "papermill": {
+     "duration": 0.024719,
+     "end_time": "2025-07-23T18:26:16.597024",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.572305",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "day                int64\n",
+       "pressure         float64\n",
+       "maxtemp          float64\n",
+       "temparature      float64\n",
+       "mintemp          float64\n",
+       "dewpoint         float64\n",
+       "humidity           int64\n",
+       "cloud              int64\n",
+       "sunshine         float64\n",
+       "winddirection    float64\n",
+       "windspeed        float64\n",
+       "rainfall          object\n",
+       "dtype: object"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "common_cols = ['day', 'pressure', 'maxtemp', 'temparature', 'mintemp', \n",
+    "               'dewpoint', 'humidity', 'cloud', 'sunshine', 'winddirection', \n",
+    "               'windspeed', 'rainfall']\n",
+    "train_org[common_cols].dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "4d5c9865",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.620623Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.620175Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.628228Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.627175Z"
+    },
+    "papermill": {
+     "duration": 0.021606,
+     "end_time": "2025-07-23T18:26:16.629935",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.608329",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0      yes\n",
+       "1      yes\n",
+       "2      yes\n",
+       "3      yes\n",
+       "4      yes\n",
+       "      ... \n",
+       "361    yes\n",
+       "362    yes\n",
+       "363    yes\n",
+       "364    yes\n",
+       "365     no\n",
+       "Name: rainfall, Length: 366, dtype: object"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_org['rainfall']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "5182e6bc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.653563Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.653167Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.658759Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.657529Z"
+    },
+    "papermill": {
+     "duration": 0.019619,
+     "end_time": "2025-07-23T18:26:16.660652",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.641033",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "map_rainfall = {\n",
+    "    'yes':1,\n",
+    "    'no':0\n",
+    "}\n",
+    "train_org['rainfall'] = train_org['rainfall'].map(map_rainfall)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "36a36440",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.684330Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.683937Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.697759Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.696592Z"
+    },
+    "papermill": {
+     "duration": 0.028235,
+     "end_time": "2025-07-23T18:26:16.699956",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.671721",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "for col in common_cols :\n",
+    "    if col!='rainfall':\n",
+    "        train[col] = train[col].astype('float64')\n",
+    "        train_org[col] = train_org[col].astype('float64')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "04cdbc09",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.723413Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.723030Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.729775Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.728698Z"
+    },
+    "papermill": {
+     "duration": 0.020892,
+     "end_time": "2025-07-23T18:26:16.731732",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.710840",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train_comp = pd.concat([train, train_org], axis=0, ignore_index=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "d2617e24",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.755047Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.754658Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.760142Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.759071Z"
+    },
+    "papermill": {
+     "duration": 0.019064,
+     "end_time": "2025-07-23T18:26:16.761881",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.742817",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train_comp['id'] = np.arange(0, train_comp.shape[0])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "28ba30f3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.785415Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.785015Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.790375Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.789359Z"
+    },
+    "papermill": {
+     "duration": 0.019065,
+     "end_time": "2025-07-23T18:26:16.792171",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.773106",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train_comp['group_year'] = train_comp['id'] // 365"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "bb628855",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.815405Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.815030Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.825106Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.824064Z"
+    },
+    "papermill": {
+     "duration": 0.023511,
+     "end_time": "2025-07-23T18:26:16.826864",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.803353",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "day              0\n",
+       "pressure         0\n",
+       "maxtemp          0\n",
+       "temparature      0\n",
+       "mintemp          0\n",
+       "dewpoint         0\n",
+       "humidity         0\n",
+       "cloud            0\n",
+       "sunshine         0\n",
+       "winddirection    1\n",
+       "windspeed        1\n",
+       "rainfall         0\n",
+       "id               0\n",
+       "group_year       0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_comp.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "32ebac06",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.850936Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.850591Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.854384Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.853384Z"
+    },
+    "papermill": {
+     "duration": 0.017589,
+     "end_time": "2025-07-23T18:26:16.856154",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.838565",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# import matplotlib.pyplot as plt\n",
+    "# plt.pie(train['rainfall'].value_counts(), autopct='%.0f%%', labels=['positive', 'negative'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "dff669dd",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.880098Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.879758Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.888488Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.887302Z"
+    },
+    "papermill": {
+     "duration": 0.022581,
+     "end_time": "2025-07-23T18:26:16.890107",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.867526",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "day              0\n",
+       "pressure         0\n",
+       "maxtemp          0\n",
+       "temparature      0\n",
+       "mintemp          0\n",
+       "dewpoint         0\n",
+       "humidity         0\n",
+       "cloud            0\n",
+       "sunshine         0\n",
+       "winddirection    0\n",
+       "windspeed        0\n",
+       "rainfall         0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "be6ade6c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.914026Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.913629Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.920400Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.919387Z"
+    },
+    "papermill": {
+     "duration": 0.020671,
+     "end_time": "2025-07-23T18:26:16.922095",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.901424",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "day              float64\n",
+       "pressure         float64\n",
+       "maxtemp          float64\n",
+       "temparature      float64\n",
+       "mintemp          float64\n",
+       "dewpoint         float64\n",
+       "humidity         float64\n",
+       "cloud            float64\n",
+       "sunshine         float64\n",
+       "winddirection    float64\n",
+       "windspeed        float64\n",
+       "rainfall           int64\n",
+       "dtype: object"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "9731d130",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.945674Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.945321Z",
+     "iopub.status.idle": "2025-07-23T18:26:16.957012Z",
+     "shell.execute_reply": "2025-07-23T18:26:16.956057Z"
+    },
+    "papermill": {
+     "duration": 0.02548,
+     "end_time": "2025-07-23T18:26:16.958834",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.933354",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "day              365\n",
+       "pressure         236\n",
+       "maxtemp          219\n",
+       "temparature      198\n",
+       "mintemp          199\n",
+       "dewpoint         218\n",
+       "humidity          49\n",
+       "cloud             78\n",
+       "sunshine         120\n",
+       "winddirection     35\n",
+       "windspeed        223\n",
+       "rainfall           2\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train.nunique()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "90803019",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:16.983494Z",
+     "iopub.status.busy": "2025-07-23T18:26:16.983113Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.607762Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.606655Z"
+    },
+    "papermill": {
+     "duration": 1.639425,
+     "end_time": "2025-07-23T18:26:18.609770",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:16.970345",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.model_selection import StratifiedKFold, GroupKFold\n",
+    "from sklearn.metrics import roc_auc_score\n",
+    "\n",
+    "\n",
+    "group_years = train_comp['group_year']\n",
+    "def cv_score(X, y, model, n_splits=5, seed=1):\n",
+    "    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)\n",
+    "    # gkf = GroupKFold(n_splits=n_splits)\n",
+    "    scores = []\n",
+    "    for i, (train_index, valid_index) in enumerate(skf.split(X, y)):\n",
+    "        X_train, X_valid = X.iloc[train_index], X.iloc[valid_index]\n",
+    "        y_train, y_valid = y.iloc[train_index], y.iloc[valid_index]\n",
+    "        model.fit(X_train.values, y_train.values)\n",
+    "        preds = model.predict_proba(X_valid.values)[:,1]\n",
+    "        score = roc_auc_score(y_valid, preds)\n",
+    "        scores.append(score)\n",
+    "        print(f'score at fold {i+1} :', score)\n",
+    "    print(f'mean score for all folds :', np.mean(scores))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "1f4e9f58",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.634483Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.633973Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.640678Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.639363Z"
+    },
+    "papermill": {
+     "duration": 0.020973,
+     "end_time": "2025-07-23T18:26:18.642213",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.621240",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['day', 'pressure', 'maxtemp', 'temparature', 'mintemp', 'dewpoint',\n",
+       "       'humidity', 'cloud', 'sunshine', 'winddirection', 'windspeed',\n",
+       "       'rainfall', 'id', 'group_year'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_comp.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "25067bef",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.667241Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.666874Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.718983Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.717888Z"
+    },
+    "papermill": {
+     "duration": 0.067079,
+     "end_time": "2025-07-23T18:26:18.721212",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.654133",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def artificial_features(df):\n",
+    "    # df['temp_diff'] = df['maxtemp'] - df['mintemp']\n",
+    "    df['day'] = pd.to_datetime(df['day'], errors='coerce')\n",
+    "\n",
+    "    df['month'] = df['day'].dt.month\n",
+    "    # Monsoon/rainy season indicator (adjust months based on your region)\n",
+    "    df['is_monsoon'] = df['month'].isin([6,7,8]).astype(int)  # Example for Northern Hemisphere summer monsoon\n",
+    "    # df['day_of_week'] = df['day'].dt.dayofweek\n",
+    "    # df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)\n",
+    "    \n",
+    "    df['avg_temp'] = (df['maxtemp'] + df['mintemp']) / 2\n",
+    "    # df['temp_deviation'] = df['temparature'] - df['avg_temp']\n",
+    "    df['dew_point_depression'] = df['temparature'] - df['dewpoint']\n",
+    "    df['temp_diff_from_avg'] = df['temparature'] - df['avg_temp']  # Deviation from average temp\n",
+    "    # df['temp_range'] = df['maxtemp'] - df['mintemp']  # Temperature range\n",
+    "    # # Wind direction - sine and cosine transformation\n",
+    "    df['wind_dir_rad'] = np.deg2rad(df['winddirection'])\n",
+    "    # df['wind_dir_sin'] = np.sin(df['wind_dir_rad'])\n",
+    "    df['wind_dir_cos'] = np.cos(df['wind_dir_rad'])\n",
+    "    # df.drop(columns=['wind_dir_rad'], inplace=True)\n",
+    "     # Temperature deviation: current avg_temp minus rolling average\n",
+    "    # # Wind chill factor (simplified version)\n",
+    "    # df['wind_chill'] = 13.12 + 0.6215 * df['temparature'] - 11.37 * (df['windspeed']**0.16) + 0.3965 * df['temparature'] * (df['windspeed']**0.16)\n",
+    "    # Air density proxy (simplified)\n",
+    "    # df['air_density'] = df['pressure'] / (df['temparature'] + 273.15)  # Using ideal gas law (P/(RT))\n",
+    "\n",
+    "    # Saturation vapor pressure (Teten's formula)\n",
+    "    # df['es'] = 0.6108 * np.exp(17.27 * df['temparature'] / (df['temparature'] + 237.3))  # in kPa\n",
+    "    # df['actual_vapor_pressure'] = 0.6108 * np.exp(17.27 * df['dewpoint'] / (df['dewpoint'] + 237.3))\n",
+    "    # df['vapor_pressure_deficit'] = df['es'] - df['actual_vapor_pressure']  # Drives evaporation\n",
+    "    # # Interaction features\n",
+    "    # df['humidity_temp'] = df['humidity'] * df['temparature']\n",
+    "    # df['cloud_sunshine'] = df['cloud'] * df['sunshine']\n",
+    "    \n",
+    "    # # Rolling statistical features\n",
+    "    # df['rolling_temp_mean'] = df['avg_temp'].rolling(window=7).mean()\n",
+    "    # df['rolling_wind_mean'] = df['windspeed'].rolling(window=7).mean()\n",
+    "    df['rolling_temp_mean'] = df['avg_temp'].rolling(window=7, min_periods=1).mean()\n",
+    "    df['rolling_wind_mean'] = df['windspeed'].rolling(window=7, min_periods=1).mean()\n",
+    "    # Wind vector components (assuming winddirection=0° is North)\n",
+    "    # df['wind_u'] = df['windspeed'] * np.sin(df['wind_dir_rad'])  # East-West component\n",
+    "    # df['wind_v'] = df['windspeed'] * np.cos(df['wind_dir_rad'])  # North-South component\n",
+    "\n",
+    "    # # Wind persistence (e.g., consistent easterly winds)\n",
+    "    # df['wind_speed_change'] = df['windspeed'].diff(1)\n",
+    "    # Lifted Index approximation (requires vertical temp profile; simplified)\n",
+    "    # df['lifted_index'] = df['mintemp'] - df['dewpoint']  # Lower values → more instability\n",
+    "\n",
+    "    # Simplified K-index (thunderstorm potential)\n",
+    "    df['k_index'] = (df['maxtemp'] - df['mintemp']) + df['dewpoint'] - (df['temparature'] - df['dewpoint'])\n",
+    "    \n",
+    "    # Pressure anomaly vs rolling mean (identifies sudden drops)\n",
+    "    # df['pressure_anomaly'] = df['pressure'] - df['pressure'].rolling(3, min_periods=1).mean()\n",
+    "    # df['k_humidity_interaction'] = df['k_index'] * df['humidity']\n",
+    "    # df['total_totals'] = (df['maxtemp'] - df['mintemp']) + (df['dewpoint'] - 50)\n",
+    "    # df['k_index_lag1'] = df['k_index'].shift(1)\n",
+    "    # df['k_index_lag2'] = df['k_index'].shift(2)\n",
+    "    # Exponential moving averages (recent trends matter more)\n",
+    "    # df['ema_temp_3'] = df['avg_temp'].ewm(span=3, adjust=False).mean()\n",
+    "    # df['ema_humidity_5'] = df['humidity'].ewm(span=5, adjust=False).mean()\n",
+    "\n",
+    "    # Rolling pressure variability (storminess indicator)\n",
+    "    # df['rolling_pressure_std_5'] = df['pressure'].rolling(5, min_periods=1).std()\n",
+    "    # Precipitable water proxy (column moisture)\n",
+    "    # df['precipitable_water'] = df['humidity'] * df['dew_point_depression']\n",
+    "     # Interaction and ratio features\n",
+    "    # df['humidity_temp_ratio'] = df['humidity'] / (df['avg_temp'] + 1e-6)  # Relationship between moisture and temperature\n",
+    "    # df['sunshine_cloud_ratio'] = df['sunshine'] / (df['cloud'] + 1e-6)    # How clear or overcast the day is\n",
+    "    # Additional rolling statistic: 7-day rolling variance for temperature\n",
+    "    # df['rolling_temp_var'] = df['avg_temp'].rolling(window=7, min_periods=1).var()\n",
+    "    # df['rolling_humidity_mean'] = df['humidity'].rolling(window=7).mean()\n",
+    "    df['temp_deviation'] = df['avg_temp'] - df['rolling_temp_mean']\n",
+    "    # df['humidity_sq'] = df['humidity'] ** 2\n",
+    "    # df['avg_temp_sq'] = df['avg_temp'] ** 2\n",
+    "    # Pressure trend: 3-day rolling mean and the deviation from it\n",
+    "    # df['rolling_pressure_mean_3'] = df['pressure'].rolling(window=3, min_periods=1).mean()\n",
+    "    # df['pressure_trend'] = df['pressure'] - df['rolling_pressure_mean_3']\n",
+    "    # df.drop(columns=['rolling_pressure_mean_3'], inplace=True)\n",
+    "    # # Lag features\n",
+    "    # df['temp_lag_1'] = df['avg_temp'].shift(1)\n",
+    "    # df['humidity_lag_1'] = df['humidity'].shift(1)\n",
+    "    # df['windspeed_lag_1'] = df['windspeed'].shift(1)\n",
+    "    \n",
+    "    # # Pressure-Temperature interaction\n",
+    "    # df['pressure_temp_interaction'] = df['pressure'] * df['avg_temp']\n",
+    "    # # Wind-Speed-Temperature interaction\n",
+    "    # df['windspeed_temp_interaction'] = df['windspeed'] * df['avg_temp']\n",
+    "    \n",
+    "    # # Season feature\n",
+    "    # df['season'] = df['month'].apply(lambda x: 'Spring' if 3 <= x <= 5 else\n",
+    "    #                                   'Summer' if 6 <= x <= 8 else\n",
+    "    #                                   'Autumn' if 9 <= x <= 11 else 'Winter')\n",
+    "\n",
+    "    # for c in ['pressure', 'maxtemp', 'temparature', 'humidity']:\n",
+    "    for c in ['humidity', 'temparature', 'pressure', 'maxtemp']:\n",
+    "        for gap in [1]:\n",
+    "            df[c+f\"_shift{gap}\"] = df[c].shift(gap)\n",
+    "            df[c+f\"_diff{gap}\"] = df[c].diff(gap)\n",
+    "    # for c in ['pressure', 'maxtemp', 'temparature', 'mintemp','dewpoint', 'humidity', 'cloud', 'sunshine', 'winddirection','windspeed']:\n",
+    "    #     for gap in [1]:\n",
+    "    #         df[c+f\"_shift{gap}\"]=df[c].shift(gap)\n",
+    "    #         df[c+f\"_diff{gap}\"]=df[c].diff(gap)\n",
+    "\n",
+    "    # # Binary encoding for season\n",
+    "    # df = pd.get_dummies(df, columns=['season'], drop_first=True)\n",
+    "    # # Drop original 'day' column\n",
+    "    \n",
+    "\n",
+    "    # df['hum_sunshine_int'] = df['humidity'] * df['sunshine']\n",
+    "    # df['hum_sunshine_ratio'] = df['humidity'] / (df['sunshine']+1e-6)\n",
+    "    # df['cloud_sunshine_int'] = df['cloud'] * df['sunshine']\n",
+    "    # df['cloud_sunshine_ratio'] = df['cloud'] / (df['sunshine']+1e-6)\n",
+    "    # df['cloud_pressure_int'] = df['cloud'] * df['pressure']\n",
+    "    # df['cloud_pressure_ratio'] = df['cloud'] / (df['pressure']+1e-6)\n",
+    "    # base_features = [\n",
+    "    #     'day', 'pressure', 'maxtemp', 'temparature', 'mintemp',\n",
+    "    #     'dewpoint', 'humidity', 'cloud', 'sunshine', 'winddirection', 'windspeed'\n",
+    "    # ]\n",
+    "    \n",
+    "    # # Verify all base features exist\n",
+    "    # missing = [f for f in base_features if f not in df.columns]\n",
+    "    # if missing:\n",
+    "    #     raise ValueError(f\"Missing base features: {missing}\")\n",
+    "\n",
+    "    # # List of all 55 interaction pairs \n",
+    "    # df['day'] = df['day'].astype(int)\n",
+    "    # interaction_pairs = [\n",
+    "    #     ('day', 'pressure'), ('day', 'maxtemp'), ('day', 'temparature'), \n",
+    "    #     ('day', 'mintemp'), ('day', 'dewpoint'), ('day', 'humidity'),\n",
+    "    #     ('day', 'cloud'), ('day', 'sunshine'), ('day', 'winddirection'),\n",
+    "    #     ('day', 'windspeed'), ('pressure', 'maxtemp'), ('pressure', 'temparature'),\n",
+    "    #     ('pressure', 'mintemp'), ('pressure', 'dewpoint'), ('pressure', 'humidity'),\n",
+    "    #     ('pressure', 'cloud'), ('pressure', 'sunshine'), ('pressure', 'winddirection'),\n",
+    "    #     ('pressure', 'windspeed'), ('maxtemp', 'temparature'), ('maxtemp', 'mintemp'),\n",
+    "    #     ('maxtemp', 'dewpoint'), ('maxtemp', 'humidity'), ('maxtemp', 'cloud'),\n",
+    "    #     ('maxtemp', 'sunshine'), ('maxtemp', 'winddirection'), ('maxtemp', 'windspeed'),\n",
+    "    #     ('temparature', 'mintemp'), ('temparature', 'dewpoint'), ('temparature', 'humidity'),\n",
+    "    #     ('temparature', 'cloud'), ('temparature', 'sunshine'), ('temparature', 'winddirection'),\n",
+    "    #     ('temparature', 'windspeed'), ('mintemp', 'dewpoint'), ('mintemp', 'humidity'),\n",
+    "    #     ('mintemp', 'cloud'), ('mintemp', 'sunshine'), ('mintemp', 'winddirection'),\n",
+    "    #     ('mintemp', 'windspeed'), ('dewpoint', 'humidity'), ('dewpoint', 'cloud'),\n",
+    "    #     ('dewpoint', 'sunshine'), ('dewpoint', 'winddirection'), ('dewpoint', 'windspeed'),\n",
+    "    #     ('humidity', 'cloud'), ('humidity', 'sunshine'), ('humidity', 'winddirection'),\n",
+    "    #     ('humidity', 'windspeed'), ('cloud', 'sunshine'), ('cloud', 'winddirection'),\n",
+    "    #     ('cloud', 'windspeed'), ('sunshine', 'winddirection'), ('sunshine', 'windspeed'),\n",
+    "    #     ('winddirection', 'windspeed')\n",
+    "    # ]\n",
+    "\n",
+    "    # # Create interaction features\n",
+    "    # for (f1, f2) in interaction_pairs:\n",
+    "    #     df[f'{f1}_{f2}'] = df[f1] * df[f2]\n",
+    "    df.drop(columns=['day', 'month', 'is_monsoon'], inplace=True)\n",
+    "    return df\n",
+    "X = train_comp.drop(columns=['rainfall', 'id', 'group_year'])\n",
+    "y = train_comp['rainfall']\n",
+    "X = X.fillna(0)\n",
+    "test = test.fillna(0)\n",
+    "X = artificial_features(X)\n",
+    "test = artificial_features(test)\n",
+    "test.drop(columns='id', inplace=True)\n",
+    "# cols = [col for col in X.columns if col!='season']\n",
+    "# X['day'] = train_comp['day']\n",
+    "X = X.fillna(0)\n",
+    "test = test.fillna(0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "45cebcb0",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.746868Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.746519Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.755082Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.753545Z"
+    },
+    "papermill": {
+     "duration": 0.024059,
+     "end_time": "2025-07-23T18:26:18.757938",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.733879",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.utils.class_weight import compute_class_weight\n",
+    "\n",
+    "cw = compute_class_weight(class_weight='balanced', classes=np.unique(y), y=y)\n",
+    "cw_dict = dict(zip(np.unique(y), cw))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "7379e9a4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.783008Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.782578Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.788749Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.787727Z"
+    },
+    "papermill": {
+     "duration": 0.020492,
+     "end_time": "2025-07-23T18:26:18.790422",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.769930",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['pressure', 'maxtemp', 'temparature', 'mintemp', 'dewpoint', 'humidity',\n",
+       "       'cloud', 'sunshine', 'winddirection', 'windspeed', 'avg_temp',\n",
+       "       'dew_point_depression', 'temp_diff_from_avg', 'wind_dir_rad',\n",
+       "       'wind_dir_cos', 'rolling_temp_mean', 'rolling_wind_mean', 'k_index',\n",
+       "       'temp_deviation', 'humidity_shift1', 'humidity_diff1',\n",
+       "       'temparature_shift1', 'temparature_diff1', 'pressure_shift1',\n",
+       "       'pressure_diff1', 'maxtemp_shift1', 'maxtemp_diff1'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 25,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "0e26a9b6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.815649Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.815288Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.819130Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.818107Z"
+    },
+    "papermill": {
+     "duration": 0.018752,
+     "end_time": "2025-07-23T18:26:18.820988",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.802236",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# !pip install tabpfn"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "69f0f90d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.845598Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.845198Z",
+     "iopub.status.idle": "2025-07-23T18:26:18.848937Z",
+     "shell.execute_reply": "2025-07-23T18:26:18.848071Z"
+    },
+    "papermill": {
+     "duration": 0.017683,
+     "end_time": "2025-07-23T18:26:18.850487",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.832804",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# !pip install cupy"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "id": "72cb7bf8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:18.875082Z",
+     "iopub.status.busy": "2025-07-23T18:26:18.874712Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.753810Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.752716Z"
+    },
+    "papermill": {
+     "duration": 10.893556,
+     "end_time": "2025-07-23T18:26:29.755677",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:18.862121",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "score at fold 1 : 0.8975677830940989\n",
+      "score at fold 2 : 0.8759039775010043\n",
+      "score at fold 3 : 0.9070309361189234\n",
+      "score at fold 4 : 0.8858577742065087\n",
+      "score at fold 5 : 0.9239725753577995\n",
+      "mean score for all folds : 0.898066609255667\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, HistGradientBoostingClassifier, AdaBoostClassifier\n",
+    "import xgboost as xgb\n",
+    "# from tabpfn import TabPFNClassifier\n",
+    "from sklearn.neural_network import MLPClassifier\n",
+    "from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler\n",
+    "from sklearn.linear_model import LogisticRegression\n",
+    "from sklearn.neighbors import KNeighborsClassifier\n",
+    "# from sklearn.svm import SVC, LinearSVC\n",
+    "# from cuml.svm import LinearSVC\n",
+    "import xgboost as xgb\n",
+    "import catboost as cb\n",
+    "import lightgbm as lgbm\n",
+    "# scaler = RobustScaler()\n",
+    "# X_scaled = scaler.fit_transform(X)\n",
+    "# test_scaled = scaler.transform(test)\n",
+    "# X_scaled_df = pd.DataFrame(X_scaled, columns=X.columns)\n",
+    "etc = ExtraTreesClassifier(\n",
+    "        n_estimators=390, max_depth=50, min_samples_split=2,\n",
+    "        min_samples_leaf=1, max_features=0.18, criterion='entropy',\n",
+    "        bootstrap=False, random_state=seed+28, n_jobs=-1\n",
+    "    )\n",
+    "scaler = StandardScaler()\n",
+    "X_scaled = scaler.fit_transform(X)\n",
+    "X_scaled_df = pd.DataFrame(X_scaled, columns=X.columns)\n",
+    "test_scaled = scaler.transform(test)\n",
+    "test_scaled_df = pd.DataFrame(test_scaled, columns=test.columns)\n",
+    "# for c in X.columns:\n",
+    "#             m = X[c].mean()\n",
+    "#             s = X[c].std()\n",
+    "#             X = (X[c] - m)/s\n",
+    "knn = KNeighborsClassifier(n_neighbors=30)\n",
+    "# linear_svc = LinearSVC(C=0.1, probability=True)\n",
+    "# svc = SVC(kernel='linear', C=0.001,  probability=True)\n",
+    "rfc = RandomForestClassifier(random_state=seed, n_jobs=-1)\n",
+    "xgb_clf = xgb.XGBClassifier(random_state=seed, n_jobs=-1, tree_method='hist')\n",
+    "lr = LogisticRegression(n_jobs=-1, random_state=seed, fit_intercept=False)\n",
+    "xgb = xgb.XGBClassifier(random_state=seed)\n",
+    "cb = cb.CatBoostClassifier(random_state=seed, verbose=0)\n",
+    "lgb = lgbm.LGBMClassifier(random_state=seed, verbose=0)\n",
+    "hgb = HistGradientBoostingClassifier(random_state=seed)\n",
+    "ada = AdaBoostClassifier(random_state=seed)\n",
+    "mlp_clf = MLPClassifier(alpha=0.01, solver='adam', learning_rate_init=0.01, activation='relu', max_iter=1000, random_state=0)\n",
+    "# keras_clf = KerasClassifier(build_fn=create_model,epochs=100,verbose=0,random_state=0)\n",
+    "# tpfn = TabPFNClassifier(device='cuda',random_state=seed)\n",
+    "# scaler_2 = StandardScaler()\n",
+    "# train_samp = train.copy()\n",
+    "# train_scaled = scaler_2.fit_transform(train_samp.drop(columns=['rainfall', 'id', 'group_year']))\n",
+    "# train_scaled_df = pd.DataFrame(train_scaled)\n",
+    "\n",
+    "# # test.drop(columns=['id'], inplace=True)\n",
+    "# test_scaled = scaler_2.transform(test)\n",
+    "# test_scaled_df = pd.DataFrame(test_scaled, columns=test.columns)\n",
+    "\n",
+    "target_main = train['rainfall']\n",
+    "cv_score(X, y, etc, n_splits=5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3cb8c786",
+   "metadata": {
+    "papermill": {
+     "duration": 0.011355,
+     "end_time": "2025-07-23T18:26:29.779053",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.767698",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "0.8882183984200667(no_artificial) vs 0.8868988357279266(all_artificial) vs 0.8871090452504493(cloud removed)\n",
+    "vs 0.8879963509707365(temp_only)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "36b0c285",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:29.804120Z",
+     "iopub.status.busy": "2025-07-23T18:26:29.803476Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.807734Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.806709Z"
+    },
+    "papermill": {
+     "duration": 0.01866,
+     "end_time": "2025-07-23T18:26:29.809443",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.790783",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# print(4//365)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "id": "35ad47e3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:29.834276Z",
+     "iopub.status.busy": "2025-07-23T18:26:29.833920Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.837628Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.836681Z"
+    },
+    "papermill": {
+     "duration": 0.018031,
+     "end_time": "2025-07-23T18:26:29.839240",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.821209",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# samp_train = train.fillna(0)\n",
+    "# samp_y = train['rainfall']\n",
+    "# cv_score(samp_train.drop(columns='rainfall'), samp_y, etc, n_splits=5)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "58bd8722",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:29.864999Z",
+     "iopub.status.busy": "2025-07-23T18:26:29.864612Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.869833Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.868871Z"
+    },
+    "papermill": {
+     "duration": 0.019954,
+     "end_time": "2025-07-23T18:26:29.871447",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.851493",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# import numpy as np\n",
+    "# from sklearn.model_selection import StratifiedKFold\n",
+    "# from scipy.stats import rankdata\n",
+    "# from sklearn.metrics import roc_auc_score\n",
+    "# from sklearn.base import clone\n",
+    "\n",
+    "# # Define base models - ExtraTrees variations\n",
+    "# base_models = [\n",
+    "#     ExtraTreesClassifier(n_estimators=200, max_depth=55, random_state=seed, n_jobs=-1),\n",
+    "#     ExtraTreesClassifier(n_estimators=300, max_depth=None, min_samples_split=4, \n",
+    "#                         min_samples_leaf=2, max_features=0.3, bootstrap=False, \n",
+    "#                         criterion='gini', random_state=seed+6, n_jobs=-1),\n",
+    "#     ExtraTreesClassifier(n_estimators=400, max_depth=40, min_samples_split=2, \n",
+    "#                         min_samples_leaf=1, max_features=0.4, bootstrap=False, \n",
+    "#                         criterion='gini', random_state=seed+7, n_jobs=-1),\n",
+    "#     ExtraTreesClassifier(\n",
+    "#         n_estimators=390, max_depth=50, min_samples_split=2,\n",
+    "#         min_samples_leaf=1, max_features=0.18, criterion='entropy',\n",
+    "#         bootstrap=False, random_state=seed+28, n_jobs=-1\n",
+    "#     )\n",
+    "# ]\n",
+    "\n",
+    "# def rank_ensemble_cv(X, y, base_models, n_splits=5, val_size=0.2, random_state=seed):\n",
+    "#     \"\"\"\n",
+    "#     Simplified rank-based ensemble validation with weight optimization\n",
+    "#     Fixes included for proper DataFrame indexing\n",
+    "#     \"\"\"\n",
+    "#     # Initialize stratified k-fold cross-validator\n",
+    "#     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)\n",
+    "    \n",
+    "#     # Arrays to store results\n",
+    "#     final_preds = np.zeros(len(y))  # Stores final blended predictions\n",
+    "#     weight_history = []  # Records weights used in each fold\n",
+    "\n",
+    "#     # Outer cross-validation loop\n",
+    "#     for fold, (train_idx, val_idx) in enumerate(skf.split(X, y), 1):\n",
+    "\n",
+    "#         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]  \n",
+    "#         y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]  \n",
+    "\n",
+    "#         rng = np.random.RandomState(fold)\n",
+    "#         idx = rng.permutation(len(X_train))  # Shuffle indices\n",
+    "#         split = int(len(X_train) * (1 - val_size))  # 80-20 split\n",
+    "        \n",
+    "#         # Split indices into training and validation subsets\n",
+    "#         train_sub_idx = idx[:split]  # Training indices\n",
+    "#         val_sub_idx = idx[split:]    # Validation indices\n",
+    "\n",
+    "#         # Get subset data using .iloc for positional indexing\n",
+    "#         X_tr = X_train.iloc[train_sub_idx]  # Training subset features\n",
+    "#         y_tr = y_train.iloc[train_sub_idx]  # Training subset targets\n",
+    "#         X_v = X_train.iloc[val_sub_idx]     # Validation features\n",
+    "#         y_v = y_train.iloc[val_sub_idx]     # Validation targets\n",
+    "\n",
+    "#         # Lists to store model outputs\n",
+    "#         val_ranks = []  # Validation set rankings\n",
+    "#         test_preds = []  # Test set predictions\n",
+    "\n",
+    "#         # Train and validate each base model\n",
+    "#         for model in base_models:\n",
+    "#             # Clone model to avoid contamination between folds\n",
+    "#             m = clone(model)\n",
+    "            \n",
+    "#             # 1. Train on training subset\n",
+    "#             m.fit(X_tr, y_tr)\n",
+    "            \n",
+    "#             # 2. Predict on validation subset\n",
+    "#             val_pred = m.predict_proba(X_v)[:, 1]\n",
+    "            \n",
+    "#             # 3. Convert predictions to ranks (0-1 scale)\n",
+    "#             val_ranks.append(rankdata(val_pred, method='dense'))\n",
+    "            \n",
+    "#             # 4. Retrain on full training data\n",
+    "#             m_full = clone(model).fit(X_train, y_train)\n",
+    "            \n",
+    "#             # 5. Predict on test fold\n",
+    "#             test_pred = m_full.predict_proba(X_val)[:, 1]\n",
+    "#             test_preds.append(test_pred)\n",
+    "\n",
+    "#         # Convert validation ranks to array (samples x models)\n",
+    "#         val_ranks = np.array(val_ranks).T\n",
+    "        \n",
+    "#         # Optimize model weights using validation ranks\n",
+    "#         weights = optimize_weights(val_ranks, y_v)\n",
+    "#         weight_history.append(weights)\n",
+    "        \n",
+    "#         # Convert test predictions to ranks\n",
+    "#         test_ranks = np.array([rankdata(p, method='dense') for p in test_preds])\n",
+    "        \n",
+    "#         # Blend test predictions using optimized weights\n",
+    "#         blended = np.average(test_ranks, axis=0, weights=weights)\n",
+    "        \n",
+    "#         # Store blended predictions for this fold\n",
+    "#         final_preds[val_idx] = blended\n",
+    "\n",
+    "#     return final_preds, weight_history, roc_auc_score(y, final_preds)\n",
+    "\n",
+    "# def optimize_weights(val_ranks, y_val, n_trials=50):\n",
+    "#     \"\"\"Bayesian optimization of ensemble weights with type safety\"\"\"\n",
+    "#     from skopt import gp_minimize\n",
+    "\n",
+    "#     def objective(weights):\n",
+    "#         # Convert to float array first to prevent integer division\n",
+    "#         weights = np.array(weights, dtype=np.float64)  # FIX HERE: Force float type\n",
+    "        \n",
+    "#         # Handle zero-sum edge case (prevent division by zero)\n",
+    "#         weight_sum = weights.sum()\n",
+    "#         if np.isclose(weight_sum, 0):\n",
+    "#             return 1.0  # Worst possible score\n",
+    "            \n",
+    "#         weights /= weight_sum  # Safe normalization\n",
+    "        \n",
+    "#         # Calculate blended predictions using matrix multiplication\n",
+    "#         blended = val_ranks @ weights  # @ operator = dot product\n",
+    "        \n",
+    "#         return -roc_auc_score(y_val, blended)  # Negative for minimization\n",
+    "\n",
+    "#     # Define continuous search space [0,1] for each model\n",
+    "#     space = [(0.0, 1.0) for _ in range(val_ranks.shape[1])]  # FIX HERE: Explicit floats\n",
+    "    \n",
+    "#     # Run Bayesian optimization with stability checks\n",
+    "#     res = gp_minimize(objective, space, \n",
+    "#                      n_calls=n_trials, \n",
+    "#                      random_state=seed,\n",
+    "#                      n_initial_points=10)  # Ensure proper initialization\n",
+    "    \n",
+    "#     # Normalize final weights safely\n",
+    "#     final_weights = np.array(res.x, dtype=np.float64)\n",
+    "#     weight_sum = final_weights.sum()\n",
+    "#     if np.isclose(weight_sum, 0):\n",
+    "#         return np.ones_like(final_weights) / len(final_weights)  # Fallback to equal weights\n",
+    "    \n",
+    "#     return final_weights / weight_sum\n",
+    "\n",
+    "# preds, weights, auc = rank_ensemble_cv(X, y, base_models)\n",
+    "# print(f'Validated Ensemble AUC: {auc:.4f}')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "id": "831c6d36",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:29.896548Z",
+     "iopub.status.busy": "2025-07-23T18:26:29.896163Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.900565Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.899514Z"
+    },
+    "papermill": {
+     "duration": 0.018488,
+     "end_time": "2025-07-23T18:26:29.902155",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.883667",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# def train_final_ensemble(X_train, y_train, X_test, base_models, cv_weights):\n",
+    "#     \"\"\"\n",
+    "#     Applies cross-validated weights to base models trained on full data\n",
+    "#     Returns blended test predictions and final model artifacts\n",
+    "#     \"\"\"\n",
+    "#     # 1. Average weights across CV folds\n",
+    "#     avg_weights = np.mean(cv_weights, axis=0)\n",
+    "#     avg_weights /= avg_weights.sum()  # Ensure normalized\n",
+    "    \n",
+    "#     # 2. Train base models on full training data\n",
+    "#     trained_models = []\n",
+    "#     test_probas = []\n",
+    "    \n",
+    "#     for model in base_models:\n",
+    "#         # Clone to avoid contamination\n",
+    "#         m = clone(model).fit(X_train, y_train)\n",
+    "#         trained_models.append(m)\n",
+    "        \n",
+    "#         # Get test probabilities\n",
+    "#         probas = m.predict_proba(X_test)[:, 1]\n",
+    "#         test_probas.append(probas)\n",
+    "    \n",
+    "#     # 3. Convert probabilities to ranks\n",
+    "#     test_ranks = np.array([rankdata(p, method='dense') for p in test_probas])\n",
+    "    \n",
+    "#     # 4. Apply averaged weights\n",
+    "#     blended_ranks = np.average(test_ranks, axis=0, weights=avg_weights)\n",
+    "    \n",
+    "#     return {\n",
+    "#         'blended_preds': blended_ranks,\n",
+    "#         'trained_models': trained_models,\n",
+    "#         'final_weights': avg_weights,\n",
+    "#         'base_predictions': test_probas\n",
+    "#     }\n",
+    "\n",
+    "# # Usage workflow\n",
+    "# # Assuming you have:\n",
+    "# # - X_train, y_train: Full training data\n",
+    "# # - X_test: New test data\n",
+    "# # - weights: List of weight arrays from CV\n",
+    "\n",
+    "# # Get final predictions\n",
+    "# idx = test['id']\n",
+    "# test.drop(columns='id', inplace=True)\n",
+    "# artifacts = train_final_ensemble(X, y, test, base_models, weights)\n",
+    "\n",
+    "# # Access results\n",
+    "# final_predictions = artifacts['blended_preds']\n",
+    "# model_objects = artifacts['trained_models']\n",
+    "# weight_vector = artifacts['final_weights']\n",
+    "# base_preds = artifacts['base_predictions']\n",
+    "\n",
+    "# print(f\"Final ensemble weights: {np.round(weight_vector, 3)}\")\n",
+    "# print(f\"Sample blended prediction: {final_predictions[0]:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "id": "c3ab3a1a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:29.927675Z",
+     "iopub.status.busy": "2025-07-23T18:26:29.927288Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.931695Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.930525Z"
+    },
+    "papermill": {
+     "duration": 0.018502,
+     "end_time": "2025-07-23T18:26:29.933349",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.914847",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# from scipy.stats import rankdata\n",
+    "\n",
+    "# def ranks_to_probas(blended_ranks, method='minmax'):\n",
+    "#     \"\"\"\n",
+    "#     Convert blended ranks to probability-like scores (0-1 scale)\n",
+    "    \n",
+    "#     Parameters:\n",
+    "#     blended_ranks : array-like, shape = [n_samples]\n",
+    "#         Raw blended rank scores from ensemble\n",
+    "#     method : {'minmax', 'percentile', 'sigmoid'}\n",
+    "#         Conversion strategy\n",
+    "        \n",
+    "#     Returns:\n",
+    "#     probas : array, shape = [n_samples]\n",
+    "#         Converted probabilities between 0 and 1\n",
+    "#     \"\"\"\n",
+    "#     if method == 'minmax':\n",
+    "#         # Simple linear scaling (preserves rank order)\n",
+    "#         min_val = blended_ranks.min()\n",
+    "#         max_val = blended_ranks.max()\n",
+    "#         return (blended_ranks - min_val) / (max_val - min_val + 1e-8)\n",
+    "    \n",
+    "#     elif method == 'percentile':\n",
+    "#         # True percentile ranks (accounts for distribution)\n",
+    "#         return rankdata(blended_ranks, method='average') / len(blended_ranks)\n",
+    "    \n",
+    "#     elif method == 'sigmoid':\n",
+    "#         # Sigmoid calibration (handles extreme values)\n",
+    "#         from scipy.special import expit\n",
+    "#         centered = blended_ranks - np.median(blended_ranks)\n",
+    "#         return expit(centered / (centered.std() + 1e-8))\n",
+    "    \n",
+    "#     else:\n",
+    "#         raise ValueError(f\"Unknown method: {method}\")\n",
+    "\n",
+    "# # Usage with your existing workflow:\n",
+    "# final_probas = ranks_to_probas(artifacts['blended_preds'], method='percentile')\n",
+    "\n",
+    "# # Sanity checks\n",
+    "# assert np.all(final_probas >= 0), \"Negative probabilities detected\"\n",
+    "# assert np.all(final_probas <= 1), \"Probabilities exceed 1\"\n",
+    "# print(f\"Probability range: {final_probas.min():.3f}-{final_probas.max():.3f}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "56871cf6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:29.958453Z",
+     "iopub.status.busy": "2025-07-23T18:26:29.958037Z",
+     "iopub.status.idle": "2025-07-23T18:26:29.962132Z",
+     "shell.execute_reply": "2025-07-23T18:26:29.961114Z"
+    },
+    "papermill": {
+     "duration": 0.018581,
+     "end_time": "2025-07-23T18:26:29.963866",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.945285",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# final_probas"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "e8769d79",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.044088Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.043746Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.054280Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.053217Z"
+    },
+    "papermill": {
+     "duration": 0.080094,
+     "end_time": "2025-07-23T18:26:30.055941",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:29.975847",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.base import clone\n",
+    "from sklearn.metrics import roc_auc_score\n",
+    "from xgboost import XGBClassifier\n",
+    "def generate_oof_preds(X, y, model_dict, n_splits=8, seed=1):\n",
+    "    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)\n",
+    "    X = X.reset_index(drop=True)\n",
+    "    y = y.reset_index(drop=True)\n",
+    "    oof_preds = pd.DataFrame(index=X.index)\n",
+    "    for name, model in model_dict.items():\n",
+    "        scores = []\n",
+    "        oof_model_preds = np.zeros(len(X))\n",
+    "        print(f'processing {name}')\n",
+    "        for i,(train_index, valid_index) in enumerate(skf.split(X, y), 1):\n",
+    "            clf = clone(model)\n",
+    "            X_train, X_valid = X.iloc[train_index], X.iloc[valid_index]\n",
+    "            y_train, y_valid = y.iloc[train_index], y.iloc[valid_index]\n",
+    "            clf.fit(X_train, y_train)\n",
+    "            preds = clf.predict_proba(X_valid)[:,1]\n",
+    "            score = roc_auc_score(y_valid, preds)\n",
+    "            oof_model_preds[valid_index] = preds\n",
+    "            # print(f'scores for fold {i} is :', score)\n",
+    "            scores.append(score)\n",
+    "        print('mean score across all folds', np.mean(scores))\n",
+    "        oof_preds[name] = oof_model_preds\n",
+    "    return oof_preds.sort_index()\n",
+    "\n",
+    "model_dict = {\n",
+    "    # Top performing ETCs (score > 0.895)\n",
+    "    'etc_o': ExtraTreesClassifier(n_estimators=200, max_depth=55, random_state=seed, n_jobs=-1),\n",
+    "    # 'etc_2': ExtraTreesClassifier(n_estimators=250, max_depth=60, min_samples_split=2, \n",
+    "    #                              min_samples_leaf=1, max_features=0.15, bootstrap=False, \n",
+    "    #                              criterion='gini', random_state=seed+1, n_jobs=-1),\n",
+    "    'etc_7': ExtraTreesClassifier(n_estimators=300, max_depth=None, min_samples_split=4, \n",
+    "                                 min_samples_leaf=2, max_features=0.3, bootstrap=False, \n",
+    "                                 criterion='gini', random_state=seed+6, n_jobs=-1),\n",
+    "    'etc_8': ExtraTreesClassifier(n_estimators=400, max_depth=40, min_samples_split=2, \n",
+    "                                 min_samples_leaf=1, max_features=0.4, bootstrap=False, \n",
+    "                                 criterion='gini', random_state=seed+7, n_jobs=-1),\n",
+    "    # 'etc_11': ExtraTreesClassifier(\n",
+    "    #     n_estimators=250, max_depth=60, min_samples_split=3, min_samples_leaf=1,\n",
+    "    #     max_features=0.35, bootstrap=False, criterion='entropy',\n",
+    "    #     random_state=seed+11, n_jobs=-1\n",
+    "    # ),\n",
+    "    # 'etc_15': ExtraTreesClassifier(\n",
+    "    #     n_estimators=300, max_depth=60, min_samples_split=2, min_samples_leaf=1,\n",
+    "    #     max_features=0.25, bootstrap=False, criterion='entropy',\n",
+    "    #     random_state=seed+15, n_jobs=-1\n",
+    "    # ),\n",
+    "    # 'etc_23': ExtraTreesClassifier(n_estimators=300, max_depth=55, min_samples_split=8, \n",
+    "    #                           min_samples_leaf=3, max_features=0.35, bootstrap=False, \n",
+    "    #                           criterion='gini', random_state=seed+23, n_jobs=-1),\n",
+    "    # 'etc_22': ExtraTreesClassifier(n_estimators=250, max_depth=None, min_samples_split=2, \n",
+    "    #                           min_samples_leaf=1, max_features=0.3, bootstrap=True, \n",
+    "    #                           criterion='gini', random_state=seed+22, n_jobs=-1),\n",
+    "    'etc_28': ExtraTreesClassifier(\n",
+    "        n_estimators=390, max_depth=50, min_samples_split=2,\n",
+    "        min_samples_leaf=1, max_features=0.15, criterion='entropy',\n",
+    "        bootstrap=False, random_state=seed+28, n_jobs=-1\n",
+    "    ),\n",
+    "   # 'knn': KNeighborsClassifier(n_neighbors=30),\n",
+    "   # 'svc': SVC(kernel='poly', degree=2, coef0=0.2, probability=True)\n",
+    "}\n",
+    "\n",
+    "#     # New Logistic Regression Variations\n",
+    "#     'logreg_1': LogisticRegression(penalty='l2', C=1.0, solver='lbfgs', max_iter=1000,\n",
+    "#                                   random_state=seed, n_jobs=-1),\n",
+    "#     'logreg_2': LogisticRegression(penalty='l1', C=0.8, solver='liblinear', max_iter=1000,\n",
+    "#                                   random_state=seed+1),\n",
+    "#     'logreg_3': LogisticRegression(penalty='elasticnet', C=1.2, solver='saga', l1_ratio=0.4,\n",
+    "#                                   max_iter=1500, random_state=seed+2),\n",
+    "#     'logreg_4': LogisticRegression(class_weight='balanced', C=0.6, penalty='l2',\n",
+    "#                                   solver='newton-cg', max_iter=1000, random_state=seed+3),\n",
+    "#     'logreg_5': LogisticRegression(penalty='none', solver='lbfgs', max_iter=2000,\n",
+    "#                                   random_state=seed+4),\n",
+    "#     'logreg_6': LogisticRegression(C=2.0, penalty='l2', solver='saga', max_iter=1000,\n",
+    "#                                   random_state=seed+5, warm_start=True),\n",
+    "\n",
+    "#     # XGBoost Classifiers\n",
+    "#     'xgb_1': XGBClassifier(n_estimators=200, max_depth=5, learning_rate=0.1,\n",
+    "#                           subsample=0.8, colsample_bytree=0.8, random_state=seed),\n",
+    "#     'xgb_2': XGBClassifier(n_estimators=300, max_depth=7, learning_rate=0.05,\n",
+    "#                           subsample=0.6, colsample_bytree=0.6, gamma=0.1,\n",
+    "#                           random_state=seed+1),\n",
+    "#     'xgb_3': XGBClassifier(n_estimators=150, max_depth=3, learning_rate=0.2,\n",
+    "#                           subsample=1.0, colsample_bytree=1.0, reg_alpha=0.5,\n",
+    "#                           random_state=seed+2)\n",
+    "# }\n",
+    "# oof_preds = generate_oof_preds(X_scaled_df, y, model_dict, n_splits=5, seed=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "6090d9e9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.081338Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.080939Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.086862Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.085679Z"
+    },
+    "papermill": {
+     "duration": 0.020541,
+     "end_time": "2025-07-23T18:26:30.088544",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.068003",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def generate_test_preds(X_scaled_df, y, test_scaled_df, model_dict, n_splits=5, seed=1):\n",
+    "    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)\n",
+    "    preds = np.zeros(len(test_scaled_df))\n",
+    "    test_preds = pd.DataFrame(index=test_scaled_df.index)\n",
+    "    for name, model in model_dict.items():\n",
+    "        clf = clone(model)\n",
+    "        clf.fit(X_scaled_df, y)\n",
+    "        preds = clf.predict_proba(test_scaled_df)[:,1]\n",
+    "        test_preds[name] = preds\n",
+    "\n",
+    "    return test_preds\n",
+    "\n",
+    "# test_scaled = scaler.transform(test)\n",
+    "# test_scaled_df = pd.DataFrame(test_scaled, columns=test.columns)\n",
+    "# test_preds = generate_test_preds(X_scaled_df, y, test_scaled_df, model_dict)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "id": "493a9337",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.114974Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.114641Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.118414Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.117563Z"
+    },
+    "papermill": {
+     "duration": 0.018487,
+     "end_time": "2025-07-23T18:26:30.119981",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.101494",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# test_ranks += np.random.uniform(0, 1e-6, size=test_ranks.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "id": "0eaabb35",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.144832Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.144484Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.151124Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.150052Z"
+    },
+    "papermill": {
+     "duration": 0.021002,
+     "end_time": "2025-07-23T18:26:30.152961",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.131959",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def evaluate_combination(weights, preds, y_true):\n",
+    "    ensemble_preds = np.average(preds, axis=1, weights=weights)\n",
+    "    return roc_auc_score(y_true, ensemble_preds)\n",
+    "\n",
+    "def hill_climbing(preds, y_true, max_iter=10000, patience=9000):\n",
+    "    n_models = preds.shape[1]\n",
+    "    best_weights = np.ones(n_models) / n_models\n",
+    "    best_score = evaluate_combination(best_weights, preds, y_true)\n",
+    "\n",
+    "    n_iter=0\n",
+    "    tol=0\n",
+    "    for i in range(max_iter):\n",
+    "        n_iter = i\n",
+    "        candidate_weights = best_weights + np.random.normal(0, 0.1, best_weights.shape)\n",
+    "        candidate_weights = candidate_weights / candidate_weights.sum()\n",
+    "        candidate_score = evaluate_combination(candidate_weights, preds, y_true)\n",
+    "\n",
+    "        if candidate_score > best_score:\n",
+    "            best_score = candidate_score\n",
+    "            best_weights = candidate_weights\n",
+    "            tol = 0\n",
+    "\n",
+    "        else:\n",
+    "            tol+=1\n",
+    "        if tol>patience:\n",
+    "            break\n",
+    "\n",
+    "    return best_score, best_weights, n_iter"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "id": "f2435f4e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.178103Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.177755Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.182323Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.181216Z"
+    },
+    "papermill": {
+     "duration": 0.018962,
+     "end_time": "2025-07-23T18:26:30.183874",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.164912",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from scipy.stats import rankdata \n",
+    "def rank_transform(column):\n",
+    "    return rankdata(column, method='average') / len(column)\n",
+    "\n",
+    "# ranked_preds = oof_preds.apply(rank_transform).add_suffix('_rank')\n",
+    "# test_ranked_preds = test_preds.apply(rank_transform).add_suffix('_rank')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "id": "ad9cca80",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.208844Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.208498Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.212595Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.211578Z"
+    },
+    "papermill": {
+     "duration": 0.018346,
+     "end_time": "2025-07-23T18:26:30.214174",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.195828",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# ranked_preds += np.random.uniform(0, 1e-6, size=ranked_preds.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "id": "7e372d81",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.239638Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.239254Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.243184Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.242147Z"
+    },
+    "papermill": {
+     "duration": 0.018159,
+     "end_time": "2025-07-23T18:26:30.244814",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.226655",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# ranked_preds"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "id": "fa7068a9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.270367Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.269996Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.273840Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.272781Z"
+    },
+    "papermill": {
+     "duration": 0.018352,
+     "end_time": "2025-07-23T18:26:30.275644",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.257292",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# score, weights, n_iter = hill_climbing(ranked_preds, y)\n",
+    "# print(f'current highest score with hill climbing: {score}, with weights: {weights}, stopped at iter: {n_iter}')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 43,
+   "id": "bdfddbc3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.300659Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.300302Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.304211Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.303119Z"
+    },
+    "papermill": {
+     "duration": 0.018321,
+     "end_time": "2025-07-23T18:26:30.305963",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.287642",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# final_preds = np.average(test_ranked_preds, axis=1, weights=weights)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "id": "62e9e459",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.331000Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.330670Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.334607Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.333610Z"
+    },
+    "papermill": {
+     "duration": 0.018377,
+     "end_time": "2025-07-23T18:26:30.336222",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.317845",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# from sklearn.linear_model import LogisticRegression\n",
+    "# from sklearn.pipeline import make_pipeline\n",
+    "# from sklearn.preprocessing import PolynomialFeatures\n",
+    "# logistic_meta = make_pipeline(\n",
+    "#     # PolynomialFeatures(degree=2, include_bias=False),\n",
+    "#     StandardScaler(),\n",
+    "#     LogisticRegression(\n",
+    "#         C=1,  # Equivalent to alpha=0.0001 (C = 1/alpha)\n",
+    "#         penalty='l2',\n",
+    "#         solver='lbfgs',\n",
+    "#         max_iter=10000,\n",
+    "#         class_weight='balanced',\n",
+    "#         random_state=seed,\n",
+    "#         fit_intercept=True\n",
+    "#     )\n",
+    "# )\n",
+    "\n",
+    "# cv_score(ranked_preds, y, logistic_meta)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "id": "1f0689de",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.361024Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.360694Z",
+     "iopub.status.idle": "2025-07-23T18:26:30.364158Z",
+     "shell.execute_reply": "2025-07-23T18:26:30.363353Z"
+    },
+    "papermill": {
+     "duration": 0.017684,
+     "end_time": "2025-07-23T18:26:30.365746",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.348062",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# from sklearn.linear_model import LogisticRegression\n",
+    "\n",
+    "# lr = LogisticRegression(\n",
+    "#     # penalty='l1',         # Options: 'l1', 'l2', 'elasticnet', 'none'\n",
+    "#     # solver='saga',        # Use 'saga' for L1 or ElasticNet regularization\n",
+    "#     # l1_ratio=0.2,         # For ElasticNet, l1_ratio defines balance (0 = L2, 1 = L1)\n",
+    "#     # C=0.7,                # Inverse of regularization strength (lower = stronger regularization)\n",
+    "#     max_iter=10000,        # Ensure convergence for complex data\n",
+    "#     random_state=42       # For reproducibility\n",
+    "# )\n",
+    "# cv_score(oof_preds, y , lr)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "id": "4c820276",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:30.390882Z",
+     "iopub.status.busy": "2025-07-23T18:26:30.390533Z",
+     "iopub.status.idle": "2025-07-23T18:26:31.561827Z",
+     "shell.execute_reply": "2025-07-23T18:26:31.560764Z"
+    },
+    "papermill": {
+     "duration": 1.185435,
+     "end_time": "2025-07-23T18:26:31.563417",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:30.377982",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: \"▸\";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: \"▾\";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: \"\";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id=\"sk-container-id-1\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>ExtraTreesClassifier(criterion=&#x27;entropy&#x27;, max_depth=50, max_features=0.18,\n",
+       "                     n_estimators=390, n_jobs=-1, random_state=29)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-1\" type=\"checkbox\" checked><label for=\"sk-estimator-id-1\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">ExtraTreesClassifier</label><div class=\"sk-toggleable__content\"><pre>ExtraTreesClassifier(criterion=&#x27;entropy&#x27;, max_depth=50, max_features=0.18,\n",
+       "                     n_estimators=390, n_jobs=-1, random_state=29)</pre></div></div></div></div></div>"
+      ],
+      "text/plain": [
+       "ExtraTreesClassifier(criterion='entropy', max_depth=50, max_features=0.18,\n",
+       "                     n_estimators=390, n_jobs=-1, random_state=29)"
+      ]
+     },
+     "execution_count": 46,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from sklearn.base import clone\n",
+    "etc_2 = clone(etc)\n",
+    "etc_2.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "id": "d4749357",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:31.588998Z",
+     "iopub.status.busy": "2025-07-23T18:26:31.588667Z",
+     "iopub.status.idle": "2025-07-23T18:26:31.592204Z",
+     "shell.execute_reply": "2025-07-23T18:26:31.591343Z"
+    },
+    "papermill": {
+     "duration": 0.018113,
+     "end_time": "2025-07-23T18:26:31.593792",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:31.575679",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# importances = etr.feature_importances_\n",
+    "# importance_df = pd.DataFrame({\n",
+    "#     'columns': X.columns,\n",
+    "#     'importance': importances\n",
+    "# })\n",
+    "# importance_df = importance_df.sort_values(by='importance', ascending=False)\n",
+    "# importance_df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "id": "e11ba413",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:31.619477Z",
+     "iopub.status.busy": "2025-07-23T18:26:31.619075Z",
+     "iopub.status.idle": "2025-07-23T18:26:31.622956Z",
+     "shell.execute_reply": "2025-07-23T18:26:31.622017Z"
+    },
+    "papermill": {
+     "duration": 0.018421,
+     "end_time": "2025-07-23T18:26:31.624561",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:31.606140",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# idx = test['id']\n",
+    "# test.drop(columns='id', inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "id": "ff9919f9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:31.651144Z",
+     "iopub.status.busy": "2025-07-23T18:26:31.650793Z",
+     "iopub.status.idle": "2025-07-23T18:26:31.850942Z",
+     "shell.execute_reply": "2025-07-23T18:26:31.849706Z"
+    },
+    "papermill": {
+     "duration": 0.215638,
+     "end_time": "2025-07-23T18:26:31.852865",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:31.637227",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "preds = etc_2.predict_proba(test)[:,1]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "id": "d55ac15d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:31.879853Z",
+     "iopub.status.busy": "2025-07-23T18:26:31.879466Z",
+     "iopub.status.idle": "2025-07-23T18:26:31.903609Z",
+     "shell.execute_reply": "2025-07-23T18:26:31.902579Z"
+    },
+    "papermill": {
+     "duration": 0.040031,
+     "end_time": "2025-07-23T18:26:31.905629",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:31.865598",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "sample_sub = pd.read_csv('/kaggle/input/playground-series-s5e3/sample_submission.csv')\n",
+    "sample_sub['rainfall'] = preds\n",
+    "sample_sub.to_csv('submission.csv', index=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "id": "c71d188c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:31.932157Z",
+     "iopub.status.busy": "2025-07-23T18:26:31.931794Z",
+     "iopub.status.idle": "2025-07-23T18:26:31.972492Z",
+     "shell.execute_reply": "2025-07-23T18:26:31.971335Z"
+    },
+    "papermill": {
+     "duration": 0.05598,
+     "end_time": "2025-07-23T18:26:31.974598",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:31.918618",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.feature_selection import RFECV\n",
+    "def optimal_features(X, y, model, n_splits=5, seed=1, scoring='roc_auc'):\n",
+    "\n",
+    "    # model = ExtraTreesClassifier(n_estimators=200, max_depth=55, n_jobs=-1, random_state=seed)\n",
+    "\n",
+    "    rfecv = RFECV(estimator=model, step=1, cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed), scoring=scoring)\n",
+    "    rfecv.fit(X, y)\n",
+    "    best_features = X.columns[rfecv.support_].to_list()\n",
+    "    best_score = max(rfecv.cv_results_['mean_test_score'])\n",
+    "\n",
+    "    return best_features, best_score"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "id": "39de0876",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:32.000799Z",
+     "iopub.status.busy": "2025-07-23T18:26:32.000349Z",
+     "iopub.status.idle": "2025-07-23T18:26:32.004581Z",
+     "shell.execute_reply": "2025-07-23T18:26:32.003519Z"
+    },
+    "papermill": {
+     "duration": 0.019556,
+     "end_time": "2025-07-23T18:26:32.006455",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:31.986899",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# best_features, best_score = optimal_features(X, y, etc)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "id": "02acd9cc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:32.033136Z",
+     "iopub.status.busy": "2025-07-23T18:26:32.032738Z",
+     "iopub.status.idle": "2025-07-23T18:26:32.036801Z",
+     "shell.execute_reply": "2025-07-23T18:26:32.035707Z"
+    },
+    "papermill": {
+     "duration": 0.019414,
+     "end_time": "2025-07-23T18:26:32.038485",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:32.019071",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# best_features"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "id": "3bb26a47",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-07-23T18:26:32.063828Z",
+     "iopub.status.busy": "2025-07-23T18:26:32.063479Z",
+     "iopub.status.idle": "2025-07-23T18:26:32.067702Z",
+     "shell.execute_reply": "2025-07-23T18:26:32.066642Z"
+    },
+    "papermill": {
+     "duration": 0.01869,
+     "end_time": "2025-07-23T18:26:32.069363",
+     "exception": false,
+     "start_time": "2025-07-23T18:26:32.050673",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# best_score"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "databundleVersionId": 11251744,
+     "sourceId": 91714,
+     "sourceType": "competition"
+    },
+    {
+     "datasetId": 5651545,
+     "sourceId": 9328134,
+     "sourceType": "datasetVersion"
+    }
+   ],
+   "dockerImageVersionId": 30918,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 21.58098,
+   "end_time": "2025-07-23T18:26:33.003295",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2025-07-23T18:26:11.422315",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
