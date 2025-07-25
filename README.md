@@ -10,19 +10,19 @@ This repository contains my complete participation in the **Kaggle Playground Se
 
 | Season | Episode | Challenge Title                                | Type           | Rank         | Teams | Percentile | Metric       |
 |:------:|:--------|:-----------------------------------------------|:---------------|:-------------|------:|-----------:|:-------------|
-| S4     | E11     | Exploring Mental Health Data                   | Classification | 35 / 2685    | 2685  | Top 1.3%   | emoji_events |
-| S5     | E2      | Backpack Prediction Challenge                  | Classification | 202 / 3393   | 3393  | Top 5.9%   | emoji_events |
-| S5     | E6      | Predicting Optimal Fertilizers                 | Classification | 274 / 2648   | 2648  | Top 10.3%  | emoji_events |
-| S5     | E5      | Predict Calorie Expenditure                    | Regression     | 375 / 4316   | 4316  | Top 8.6%   | emoji_events |
-| S4     | E8      | Binary Prediction of Poisonous Mushrooms      | Classification | 459 / 2422   | 2422  | Top 18.9%  | emoji_events |
-| S5     | E1      | Forecasting Sticker Sales                      | Forecasting    | 468 / 2722   | 2722  | Top 17.2%  | emoji_events |
-| S4     | E7      | Insurance Cross-Selling                        | Classification | 472 / 2234   | 2234  | Top 21.1%  | emoji_events |
-| S4     | E10     | Loan Approval Prediction                       | Classification | 474 / 3858   | 3858  | Top 12.2%  | emoji_events |
-| S4     | E6      | Academic Success Classification                | Classification | 587 / 2684   | 2684  | Top 21.9%  | emoji_events |
-| S5     | E4      | Predict Podcast Listening Time                 | Regression     | 878 / 3310   | 3310  | Top 26.5%  | emoji_events |
-| S4     | E5      | Regression with Flood Prediction               | Regression     | 985 / 2788   | 2788  | Top 35.3%  | emoji_events |
-| S5     | E3      | Binary Prediction with Rainfall                | Classification | 1327 / 4381  | 4381  | Top 30.3%  | emoji_events |
-| S4     | E9      | Regression of Used Car Prices                  | Regression     | 1337 / 3066  | 3066  | Top 43.6%  | emoji_events |
+| S4     | E11     | Exploring Mental Health Data                   | Classification | 35 / 2685    | 2685  | Top 1.3%   | Accuracy |
+| S5     | E2      | Backpack Prediction Challenge                  | Classification | 202 / 3393   | 3393  | Top 5.9%   | Root Mean Squared Error(RMSE) |
+| S5     | E6      | Predicting Optimal Fertilizers                 | Classification | 274 / 2648   | 2648  | Top 10.3%  |  Mean Average Precision @ 3 (MAP@3) |
+| S5     | E5      | Predict Calorie Expenditure                    | Regression     | 375 / 4316   | 4316  | Top 8.6%   | Root Mean Squared Logarithmic Error(RMSLE) |
+| S4     | E8      | Binary Prediction of Poisonous Mushrooms      | Classification | 459 / 2422   | 2422  | Top 18.9%  | Matthews correlation coefficient (MCC) |
+| S5     | E1      | Forecasting Sticker Sales                      | Forecasting    | 468 / 2722   | 2722  | Top 17.2%  |  Mean Absolute Percentage Error (MAPE) |
+| S4     | E7      | Insurance Cross-Selling                        | Classification | 472 / 2234   | 2234  | Top 21.1%  |  area under the ROC curve |
+| S4     | E10     | Loan Approval Prediction                       | Classification | 474 / 3858   | 3858  | Top 12.2%  |  area under the ROC curve |
+| S4     | E6      | Academic Success Classification                | Classification | 587 / 2684   | 2684  | Top 21.9%  | Accuracy |
+| S5     | E4      | Predict Podcast Listening Time                 | Regression     | 878 / 3310   | 3310  | Top 26.5%  | Root Mean Squared Error (RMSE) |
+| S4     | E5      | Regression with Flood Prediction               | Regression     | 985 / 2788   | 2788  | Top 35.3%  |  R2 score |
+| S5     | E3      | Binary Prediction with Rainfall                | Classification | 1327 / 4381  | 4381  | Top 30.3%  | area under the ROC curve |
+| S4     | E9      | Regression of Used Car Prices                  | Regression     | 1337 / 3066  | 3066  | Top 43.6%  | Root Mean Squared Error (RMSE) |
 
 
 ---
