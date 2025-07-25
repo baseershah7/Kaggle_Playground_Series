@@ -89,5 +89,3 @@ This project explores mental health survey data as part of the Kaggle Playground
 ## Author
 - [baseershah7](https://github.com/baseershah7)
 
-## License
-Licensed under the MIT License.
