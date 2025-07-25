@@ -1,13 +1,13 @@
 # Forecasting Sticker Sales
 
 ## Overview
-This folder contains a series of notebooks tackling the Kaggle Playground Series - Sticker Sales forecasting challenge. The goal is to predict sticker sales across different countries, stores, and products using a blend of classic feature engineering, boosting models, AutoML frameworks, and deep learning approaches. The project explores advanced regression, time series feature engineering, and automated modeling pipelines.
+This folder contains a series of notebooks tackling the Kaggle Playground Series - Sticker Sales forecasting challenge. The goal is to predict sticker sales across different countries, stores, and products using a blend of classic feature engineering, boosting models, and automated tabular modeling frameworks.
 
 ## Notebooks
 
 ### 1. `PSS5E1-STICKER-SALES.ipynb`
 - Feature engineering and boosting models for time series regression (LightGBM, CatBoost, XGBoost, Linear Regression).
-- Rich temporal, categorical, and economic features (GDP ratios, cyclical time encodings).
+- Rich temporal, categorical, and economic features (e.g., GDP ratios, cyclical encodings).
 - Boxcox and quantile transformations for target normalization.
 - Robust cross-validation (KFold, TimeSeriesSplit).
 - Final predictions are transformed back to original scale and submitted.
@@ -16,8 +16,7 @@ This folder contains a series of notebooks tackling the Kaggle Playground Series
 - Automated tabular regression using AutoGluon Tabular.
 - Multiple model types: GBM, CatBoost, XGBoost, Neural Net, RF, Extra Trees, Linear Regression, KNN.
 - 10-fold bagging, GPU acceleration, and advanced ensembling.
-- Leaderboard R2 scores > 0.97.
-- Submission for both sticker sales and UHI Index prediction.
+- Submission for sticker sales forecasting.
 
 ### 3. `PSS5E1-h2o-interferenc.ipynb`
 - Inference pipeline using H2O’s AutoML trained XGBoost model.
@@ -28,16 +27,15 @@ This folder contains a series of notebooks tackling the Kaggle Playground Series
 
 ### 4. `PSS5E1-h2o-training.ipynb`
 - Training pipeline using H2O’s AutoML (XGBoost, GBM, DeepLearning, StackedEnsemble, DRF, GLM).
-- Integrates additional external features (UHI Index, weather, building, geospatial, road network).
-- Trains up to 50 models with 11,229 training rows and 26 features, using R2 as main metric.
+- Trains up to 50 models with extensive tabular features.
 - Leaderboard and cross-validation OOF predictions for all models.
 - Automated model saving and leaderboard export.
-- Produces robust deep learning and ensemble models for sticker sales and UHI prediction.
+- Produces robust deep learning and ensemble models for sticker sales prediction.
 
 ## Data Sources
 - `train.csv` and `test.csv`: Main sticker sales data.
 - `sample_submission.csv`: Kaggle template.
-- Enhanced external datasets: GDP data from worldbank.
+- External: GDP features and other tabular enhancements.
 
 ## Project Workflow
 
@@ -46,14 +44,13 @@ This folder contains a series of notebooks tackling the Kaggle Playground Series
    - Applies advanced transformations (log, sqrt, boxcox, Yeo-Johnson, quantile) to normalize and analyze sticker sales.
 
 2. **Feature Engineering**
-   - Creates time-based, cyclical, economic, and geospatial features (year, month, week, day, GDP ratios, UHI Index).
+   - Creates time-based, cyclical, and economic features (year, month, week, day, GDP ratios).
    - Encodes categorical variables and addresses missing values and outliers.
-   - GDP ratios and UHI Index add economic and climate context.
 
 3. **Modeling Approaches**
    - **Boosting Models:** LightGBM, CatBoost, XGBoost with rich feature sets.
-   - **AutoML:** AutoGluon for tabular regression, H2O for deep learning and ensembling.
-   - **Model Stacking/Ensembling:** Weighted ensembles combine predictions for robust accuracy.
+   - **AutoML Frameworks:** AutoGluon for tabular regression, H2O for deep learning and ensembling.
+   - **Model Ensembling:** Weighted ensembles combine predictions for robust accuracy.
    - **Inference Pipelines:** Efficient prediction and reverse transformation for final outputs.
 
 4. **Evaluation & Results**
@@ -64,18 +61,18 @@ This folder contains a series of notebooks tackling the Kaggle Playground Series
 
 5. **Submission**
    - All notebooks produce automated, robust submission files.
-   - Pipelines handle prediction, transformation, and export for both sticker sales and UHI Index tasks.
+   - Pipelines handle prediction, transformation, and export for sticker sales forecasting.
 
 ## Key Insights
-- **Feature engineering** (especially temporal, economic, and geospatial features) is crucial for high-accuracy forecasting.
-- **Advanced ensembling and AutoML frameworks** (AutoGluon, H2O) outperform single models, especially on large, complex tabular data.
-- **Boxcox and quantile transformations** help normalize skewed targets and improve model stability.
-- **Robust validation** (KFold, TimeSeriesSplit, OOF predictions) supports leaderboard success.
+- Feature engineering (especially temporal and economic features) is crucial for high-accuracy forecasting.
+- Advanced ensembling and AutoML frameworks (AutoGluon, H2O) outperform single models, especially on large, complex tabular data.
+- Boxcox and quantile transformations help normalize skewed targets and improve model stability.
+- Robust validation (KFold, TimeSeriesSplit, OOF predictions) supports leaderboard success.
 
 ## Future Work
-- Add further feature engineering (holidays, promotions, weather, climate indices).
+- Add further feature engineering (holidays, promotions, weather).
 - Hyperparameter tuning, custom stacking, and meta-modeling.
-- Potential for more ensembling techniques.
+- Application to other time series forecasting tasks.
 
 ## How to Reproduce
 1. Open each notebook in a Kaggle or Jupyter environment.
@@ -84,3 +81,4 @@ This folder contains a series of notebooks tackling the Kaggle Playground Series
 
 ## Author
 - [baseershah7](https://github.com/baseershah7)
+
