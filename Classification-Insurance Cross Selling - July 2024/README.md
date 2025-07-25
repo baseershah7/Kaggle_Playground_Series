@@ -1,5 +1,5 @@
 
-# Classification - Insurance Cross Selling - July 2024
+# Binary Classification - Insurance Cross Selling - July 2024
 
 ## Overview
 This project is part of Kaggle's Playground Series (July 2024) and tackles binary classification for insurance cross-selling. The objective is to predict whether a policyholder will respond positively (1) or negatively (0) to cross-selling efforts, using a large, synthetic, highly imbalanced dataset.
