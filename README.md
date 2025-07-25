@@ -30,16 +30,13 @@ This repository contains my complete participation in the **Kaggle Playground Se
 ## 🔍 Contents
 
 Each subfolder contains:
-- ✅ `EDA.ipynb`: Initial Exploratory Analysis
-- ⚙️ `model_x.ipynb`: Model training and evaluation
-- 📊 `optuna.ipynb` or `automl.ipynb`: Hyperparameter tuning
-- 🧠 `README.md`: Short description of the competition, approach used, and final rank.
+- Competition Notebooks (EDA, Preprocessing, Feature_Selection, Ensemble, Optuna, Main Notebook) ----- varies for each episode
+- `README.md`: Short description of the competition, approach used, and final rank.
 
 ---
 
-## 🔧 Tools Used
+##  Technical Stack for this series
 
-- Python, Pandas, Scikit-Learn, XGBoost, LightGBM, CatBoost
+- Python, Pandas, Numpy, Scipy, Scikit-Learn, XGBoost, LightGBM, CatBoost, Tensorflow, Pytorch
 - AutoGluon, H2O AutoML, Optuna
-- Ensemble Modeling, Feature Engineering, Cross Validation
-- SHAP for model explainability
+- Ensemble Modeling, Feature Engineering, Preprocessing Pipelines, Cross Validation Frameworks
