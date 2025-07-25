@@ -37,7 +37,7 @@ This folder contains a series of notebooks tackling the Kaggle Playground Series
 ## Data Sources
 - `train.csv` and `test.csv`: Main sticker sales data.
 - `sample_submission.csv`: Kaggle template.
-- Enhanced external datasets: GDP/UHI Index, weather, building, road network, and other geospatial features.
+- Enhanced external datasets: GDP data from worldbank.
 
 ## Project Workflow
 
