@@ -27,7 +27,7 @@ This repository contains my complete participation in the **Kaggle Playground Se
 
 ---
 
-## 🔍 Contents
+## Contents
 
 Each subfolder contains:
 - Competition Notebooks (EDA, Preprocessing, Feature_Selection, Ensemble, Optuna, Main Notebook) ----- varies for each episode
