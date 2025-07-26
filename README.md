@@ -1,5 +1,5 @@
 # Kaggle Playground Series (S4 + S5)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 This repository contains my complete participation in the **Kaggle Playground Series (Season 4 & 5)**. Each folder contains my experiments, notebooks, and approaches for the corresponding episode. Most notebooks are complete E2E pipelines, ranging from baseline models to AutoML/Optuna optimization, ensemble learning, and model stacking.
 
 >  I participated in over **13 Playground Competitions** and still counting, consistently placing in the top 10–20% in many of them.
@@ -34,6 +34,16 @@ Each subfolder contains:
 - `README.md`: Short description of the competition, approach used, and final rank.
 
 ---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+You are free to use, modify, and distribute this code for personal or commercial purposes.  
+**Attribution is required** — please retain the license notice and credit the original author.
+
+© 2024 [[Baseer Hassan Shah](https://github.com/baseershah7)]
+
 
 ##  Technical Stack for this series
 
