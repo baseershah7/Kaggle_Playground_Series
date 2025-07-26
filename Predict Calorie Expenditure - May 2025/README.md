@@ -1,119 +1,75 @@
-# Loan Approval Prediction - Oct 2024
+# Predict Calorie Expenditure - May 2025
 
 ## Overview
-This project addresses the Kaggle Playground Series (October 2024) challenge focused on predicting loan approval status using binary classification. The solution combines feature engineering, ensemble modeling, and AutoML approaches to achieve state-of-the-art results.
-
-## Key Features
-- Combines competition data with external credit risk dataset
-- Implements 24+ engineered features including:
-  - Debt-to-income ratios
-  - Employment stability flags
-  - Risk categorization features
-  - Interaction terms between demographic/financial attributes
-- Multiple modeling approaches including:
-  - Traditional ML (XGBoost/LightGBM)
-  - AutoML (AutoGluon/H2O)
-  - Optimized CatBoost with Optuna tuning
-- Ensemble learning with Out-of-Fold (OOF) predictions
+This project is part of Kaggle's Playground Series (May 2025) and focuses on predicting calorie expenditure using a synthetic dataset. The solution leverages ensemble methods, hyperparameter optimization, and feature engineering to achieve high predictive performance.
 
 ## Files
-
-| Notebook | Description |
-|----------|-------------|
-| `PSS4E10-(XGB, LGBM).ipynb` | Core notebook with feature engineering and traditional ML |
-| `PSS4E10-autogluon-automl-inference.ipynb` | Inference for pre-trained AutoGluon model |
-| `PSS4E10-autogluon-training.ipynb` | Training notebook for AutoGluon with best-quality presets |
-| `PSS4E10-catboost.ipynb` | CatBoost implementation with Optuna hyperparameter optimization |
-| `PSS4E10-h2o-automl-inference.ipynb` | Inference for pre-trained H2O AutoML model |
-| `PSS4E10h2o-automl-training.ipynb` | Training notebook for H2O AutoML with leaderboard tracking |
+- `PSS5E5-CALORIE-ENSEMBLE.ipynb`: Main notebook for ensemble modeling, OOF predictions, and hill-climbing weight optimization.
+- `PSS5E5-CALORIE-EXPENDITURE.ipynb`: Notebook for data loading, feature engineering, and generating model predictions.
+- `PSS5E5-CALORIE-OPTUNA.ipynb`: Notebook for hyperparameter tuning using Optuna for CatBoost and XGBoost models.
+- `README.md`: Project documentation.
 
 ## Data Sources
+- `/kaggle/input/playground-series-s5e5/train.csv`: Training data.
+- `/kaggle/input/playground-series-s5e5/test.csv`: Test data for predictions.
+- `/kaggle/input/playground-series-s5e5/sample_submission.csv`: Submission template.
+- `/kaggle/input/calorie-expenditure/`: Additional precomputed OOF predictions and CatBoost models.
 
-- **Competition Data**:
-  - `/kaggle/input/playground-series-s4e10/train.csv`: Training data
-  - `/kaggle/input/playground-series-s4e10/test.csv`: Test data
-  - `/kaggle/input/playground-series-s4e10/sample_submission.csv`: Submission template
+## Dataset Description
+| Feature       | Description                          |
+|---------------|--------------------------------------|
+| id            | Unique identifier                    |
+| Sex           | Gender (male/female)                 |
+| Age           | Participant age                      |
+| Height         | Height in cm                         |
+| Weight         | Weight in kg                         |
+| Duration       | Exercise duration (minutes)          |
+| Heart_Rate     | Average heart rate during exercise   |
+| Body_Temp      | Body temperature (°C)                |
+| Calories       | Target: Calories burned              |
 
-- **External Data**:
-  - `/kaggle/input/loan-approval-prediction/credit_risk_dataset.csv`: Additional loan risk data
+## Project Workflow
 
-## Approach
+### 1. Data Loading & Preprocessing
+- Loaded training/test data and mapped categorical `Sex` to numeric values (0/1).
+- Generated out-of-fold (OOF) predictions from pre-trained CatBoost and XGBoost models.
 
-### 1. Data Preparation
+### 2. Ensemble Modeling
+- Combined OOF predictions from **20 CatBoost** and **20 XGBoost** models.
+- Optimized ensemble weights using **hill-climbing** to minimize RMSLE.
+- Final predictions derived from weighted averaging of base models.
 
-- Combined competition data with external dataset
-- Cleaned missing values and standardized formats
-- Feature engineering created 24+ new features including:
+### 3. Feature Engineering
+- Created interaction features (e.g., `bmi_hr` = BMI × Heart Rate).
+- Implemented domain-specific proxies (e.g., metabolic rate estimates).
 
-```python
-# Example feature engineering code
-df['loan_to_income'] = (df['loan_amnt']/df['person_income'] - df['loan_percent_income'])
-df['employment_stability'] = np.where(df['person_emp_length'] > 5, 'Stable', 'Unstable')
-df['risk_flag'] = np.where((df['cb_person_default_on_file'] == 'Y') & 
-                           (df['loan_grade'].isin(['C','D','E'])), 1, 0)
-```
+### 4. Hyperparameter Optimization
+- Used **Optuna** to tune CatBoost/XGBoost hyperparameters:
+  - Key parameters: `learning_rate`, `max_depth`, `subsample`, regularization terms.
+  - GPU acceleration enabled for faster training.
+- Achieved best RMSLE of **0.05942** with optimized XGBoost.
 
-### 2. Modeling Strategies
-#### a) Traditional ML (XGBoost/LightGBM)
-- Class-weighted training to handle 5:1 class imbalance
-- Stratified KFold cross-validation
-- Out-of-fold (OOF) predictions for ensemble
+### 5. Model Training & Evaluation
+- 10-fold cross-validation for robust evaluation.
+- Metric: Root Mean Squared Logarithmic Error (RMSLE).
 
-#### b) AutoML Approaches
-AutoGluon:
-
-- Trained with presets='best_quality'
-- Achieved 0.9582 validation AUC
-
-H2O AutoML:
-
-- Generated leaderboard of 32+ models
-- Best model: StackedEnsemble_AllModels (0.9612 AUC)
-
-#### c) CatBoost Optimization
-- Optuna hyperparameter tuning with delayed pruning
-- GPU acceleration
-- Final model achieved 0.9678 validation AUC
-
-``` python
-# Key parameters from best trial
-params = {
-    'learning_rate': 0.00526,
-    'max_depth': 10,
-    'l2_leaf_reg': 1.08e-7,
-    'border_count': 130,
-    'scale_pos_weight': 3.0,
-    'task_type': 'GPU'
-}
-```
-### 3. Ensemble Learning
-- Combined OOF predictions from multiple models
-- Used hill climbing optimization to find optimal weights
-- Final ensemble achieved best private score
+## Key Findings
+- **Ensemble Superiority**: Weighted averaging of CatBoost/XGBoost OOF predictions outperformed single models.
+- **Optuna Efficiency**: Bayesian optimization with delayed pruning significantly improved performance.
+- **GPU Advantage**: Enabled rapid training of large ensembles.
+- **Critical Features**: Duration, Heart Rate, and Body Temperature were most predictive.
 
 ## How to Reproduce
-### 1. Install Dependencies
-```bash
-pip install autogluon.tabular h2o catboost optuna
-```
-### 2. Data Setup
-Place all CSV files in /kaggle/input/ directories as shown in notebook paths.
-
-### 3. Execute Order
-
-Execute order not dependednt on each other.
-
-## Key Insights
-- Feature Engineering: Combining multiple categorical variables significantly improved performance
-- Class Imbalance: Weighting strategies were critical due to 5:1 imbalance
-- AutoML Efficiency: AutoML approaches achieved competitive results with minimal tuning
-- GPU Acceleration: CatBoost with GPU achieved best single-model performance
+1. Enable GPU runtime in Kaggle.
+2. Run notebooks (they are independent of each other ):
+   - `PSS5E5-CALORIE-EXPENDITURE.ipynb` → Generate features/OOF predictions.
+   - `PSS5E5-CALORIE-ENSEMBLE.ipynb` → Optimize ensemble weights.
+   - `PSS5E5-CALORIE-OPTUNA.ipynb` → Tune hyperparameters.
 
 ## Future Work
-- Ensemble multiple AutoML approaches
-- Further hyperparameter tuning for XGBoost/LightGBM
-- Explore deep learning architectures
-- Analyze feature importance for business insights
+- Include more diverse range of models for oof ensembling.
+- Implement automated feature engineering pipelines.
+- Investigate model stacking for further performance gains.
 
 ## Author
 - [baseershah7](https://github.com/baseershah7)
