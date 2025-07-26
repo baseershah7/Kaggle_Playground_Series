@@ -66,11 +66,11 @@ This project tackles a regression task to predict used car prices using a synthe
 - Feature Impact: Dropping clean_title (due to minimal variance) and handling accident naively yielded better results.
 - Model Choice: LightGBM outperformed other models (XGBoost, CatBoost) in preliminary tests, especially with GPU acceleration.
 ## How to Reproduce
-### 1. Environment Setup: Ensure GPU runtime is enabled in Kaggle.
-### 2.Run Notebooks:
-- PSS4E9_Preprocessing_Pipeline.ipynb → Analyze missing values and preprocess data.
-- PSS4E9_cleaned_reg.ipynb → Train the final LightGBM model.
-### 3. Submission: Use the preprocessed test data to generate predictions and submit.
+- Environment Setup: Ensure GPU runtime is enabled in Kaggle.
+- Run Notebooks:
+-- PSS4E9_Preprocessing_Pipeline.ipynb → Analyze missing values and preprocess data.
+-- PSS4E9_cleaned_reg.ipynb → Train the final LightGBM model.
+- Submission: Use the preprocessed test data to generate predictions and submit.
 ## Future Work
 - Explore advanced feature engineering (e.g., more interaction terms between brand, model, and engine).
 - Experiment with model stacking or ensemble methods.
