@@ -1,4 +1,4 @@
-# Predicting Optimal Fertilizers - Jun 2025  Top 10 % solution
+# Predicting Optimal Fertilizers - Jun 2025 -  Top 10 % solution
 
 ## Overview
 This project tackles a 7-class classification problem to predict the optimal fertilizer for agricultural conditions using a synthetic dataset. The solution focuses on feature engineering, target encoding, and hyperparameter optimization to maximize Mean Average Precision at 3 (MAP@3).
