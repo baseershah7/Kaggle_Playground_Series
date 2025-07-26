@@ -69,21 +69,25 @@ The solution employs multiple modeling strategies:
 ### 1. Install Dependencies
 ```bash
 pip install autogluon.tabular h2o catboost optuna
-
-2. Data Setup
+```
+### 2. Data Setup
 Place all CSV files in /kaggle/input/ directories as shown in notebook paths.
-3. Execution Order
-Train models using *-training.ipynb notebooks.
-Generate submissions using *-inference.ipynb notebooks.
-Key Insights
-Feature engineering combining multiple categorical variables significantly improved performance.
-Class weighting was critical due to 5:1 imbalance in loan approval status.
-AutoML approaches achieved competitive results with minimal tuning.
-CatBoost with GPU acceleration provided the best single-model performance.
-Future Work
-Ensemble multiple AutoML approaches.
-Further hyperparameter tuning for XGBoost/LightGBM.
-Explore deep learning architectures.
-Analyze feature importance for business insights.
-Author
-[Your Kaggle/Repository Handle]
+
+### 3. Execution Order
+- Train models using *-training.ipynb notebooks.
+- Generate submissions using *-inference.ipynb notebooks.
+  
+## Key Insights
+- Feature engineering combining multiple categorical variables significantly improved performance.
+- Class weighting was critical due to 5:1 imbalance in loan approval status.
+- AutoML approaches achieved competitive results with minimal tuning.
+- CatBoost with GPU acceleration provided the best single-model performance.
+- 
+## Future Work
+- Ensemble multiple AutoML approaches.
+- Further hyperparameter tuning for XGBoost/LightGBM.
+- Explore deep learning architectures.
+- Analyze feature importance for business insights.
+  
+## Author
+- [baseershah7](https://github.com/baseershah7)
