@@ -90,3 +90,30 @@ params = {
 - Combined OOF predictions from multiple models
 - Used hill climbing optimization to find optimal weights
 - Final ensemble achieved best private score
+
+## How to Reproduce
+### 1. Install Dependencies
+```bash
+pip install autogluon.tabular h2o catboost optuna
+```
+### 2. Data Setup
+Place all CSV files in /kaggle/input/ directories as shown in notebook paths.
+
+### 3. Execute Order
+
+Execute order not dependednt on each other.
+
+## Key Insights
+- Feature Engineering: Combining multiple categorical variables significantly improved performance
+- Class Imbalance: Weighting strategies were critical due to 5:1 imbalance
+- AutoML Efficiency: AutoML approaches achieved competitive results with minimal tuning
+- GPU Acceleration: CatBoost with GPU achieved best single-model performance
+
+## Future Work
+- Ensemble multiple AutoML approaches
+- Further hyperparameter tuning for XGBoost/LightGBM
+- Explore deep learning architectures
+- Analyze feature importance for business insights
+
+## Author
+- [baseershah7](https://github.com/baseershah7)
